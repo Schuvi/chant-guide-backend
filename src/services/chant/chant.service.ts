@@ -3,13 +3,15 @@ import { InjectModel } from '@nestjs/mongoose';
 import { CreateChantDto } from 'src/dtos/chant/create-chant.dto';
 import { UpdateChantDto } from 'src/dtos/chant/update-chant.dto';
 import { IChant } from 'src/interfaces/chant/chant.interface';
-import { Model, Types } from 'mongoose';
+import {
+  Model,
+  ProjectionType,
+  RootFilterQuery,
+  Types,
+} from 'mongoose';
 import { PaginationDto } from 'src/dtos/pagination/pagination.dto';
 import { PaginatedResponseDto } from 'src/dtos/pagination/pagination-response.dto';
-import { paginate, PopulateConfig } from 'src/common/utils/pagination.util';
-import { User } from 'src/schema/user/user.schema';
-import { Chant } from 'src/schema/chant/chant.schema';
-import { Categories } from 'src/schema/categories/categories.schema';
+import { paginateAggregate } from 'src/common/utils/AggregatePagination.util';
 
 @Injectable()
 export class ChantService {
@@ -32,62 +34,33 @@ export class ChantService {
   async getAllChants(
     paginationDto: PaginationDto,
   ): Promise<PaginatedResponseDto<IChant>> {
-    const query = {};
-    const except = {
+    const query: RootFilterQuery<IChant> = {};
+    const except: ProjectionType<IChant> = {
       content: 0,
       __v: 0,
       videoUrl: 0,
       imageId: 0,
       createdAt: 0,
       updatedAt: 0,
+      categoryId: 0,
     };
 
-    const populateConfigs: PopulateConfig[] = [];
-
-    const relationsFromDto = paginationDto.relations
-      ? paginationDto.relations
-          .split(',')
-          .map((rel) => rel.trim().toLowerCase())
-      : [];
-
-    if (relationsFromDto.includes('author')) {
-      populateConfigs.push({
-        path: 'authorId',
-        select: 'name', // Pilih field yang diinginkan dari model User
-        model: User.name, // Nama model Mongoose
-        as: 'author', // Ubah nama field di output dari authorId menjadi author
-      });
-    }
-
-    if (relationsFromDto.includes('category')) {
-      populateConfigs.push({
-        path: 'categoryId',
-        select: 'categories_name', // Pilih field yang diinginkan dari model Category
-        model: Categories.name, // Nama model Mongoose
-        as: 'category', // Ubah nama field di output dari categoryId menjadi category
-      });
-    }
-
-    const chantData = await paginate<IChant>(
+    const chantData = await paginateAggregate<IChant>(
       this.chantModel,
+      [
+        {
+          $lookup: {
+            from: 'categories',
+            localField: 'categoryId',
+            foreignField: '_id',
+            as: 'category',
+          },
+        },
+      ],
       paginationDto,
-      query,
-      except,
-      populateConfigs,
     );
 
-    const dataAsIChant = chantData.data as IChant[];
-
-    if (!chantData || chantData.data.length === 0) {
-      throw new NotFoundException('No chant found');
-    }
-
-    return new PaginatedResponseDto<IChant>(
-      dataAsIChant,
-      chantData.totalItems,
-      chantData.currentPage,
-      chantData.itemsPerPage,
-    );
+    return chantData;
   }
 
   async getChantById(chantId: string): Promise<IChant> {

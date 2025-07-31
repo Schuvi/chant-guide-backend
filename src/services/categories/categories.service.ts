@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { paginate } from 'src/common/utils/pagination.util';
+import { newPaginate } from 'src/common/utils/newPagination.util';
 import { CreateCategoriesDto } from 'src/dtos/categories/create-categories.dto';
 import { UpdateCategoriesDto } from 'src/dtos/categories/update-categories.dto';
 import { PaginatedResponseDto } from 'src/dtos/pagination/pagination-response.dto';
@@ -26,11 +26,11 @@ export class CategoriesService {
     const query = {};
     const except = {};
 
-    const categoriesData = await paginate<ICategories>(
+    const categoriesData = await newPaginate<ICategories>(
       this.categoriesModel,
-      paginationDto,
       query,
       except,
+      paginationDto,
     );
 
     if (!categoriesData || categoriesData.data.length === 0) {

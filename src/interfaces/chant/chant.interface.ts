@@ -14,5 +14,5 @@ export interface IChant extends Document {
   createdAt: Date;
   updatedAt: Date;
   author: IUser;
-  Category: ICategories;
+  category: ICategories;
 }

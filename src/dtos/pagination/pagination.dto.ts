@@ -24,14 +24,14 @@ export class PaginationDto {
   @Type(() => String)
   searchField?: string;
 
-  @ApiProperty({
-    required: false,
-    type: [String],
-    description:
-      'Comma-separated list of relations to include (e.g., "author,category")',
-    example: 'author,category',
-  })
-  @IsOptional()
-  @IsString()
-  relations?: string;
+  // @ApiProperty({
+  //   required: false,
+  //   type: [String],
+  //   description:
+  //     'Comma-separated list of relations to include (e.g., "author,category")',
+  //   example: 'author,category',
+  // })
+  // @IsOptional()
+  // @IsString()
+  // relations?: string;
 }

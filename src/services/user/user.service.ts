@@ -3,10 +3,10 @@ import { InjectModel } from '@nestjs/mongoose';
 import { CreateUserDto } from 'src/dtos/user/create-user.dto';
 import { UpdateUserDto } from 'src/dtos/user/update-user.dto';
 import { IUser } from 'src/interfaces/user/user.interface';
-import { Model } from 'mongoose';
-import { paginate } from 'src/common/utils/pagination.util';
+import { Model, ProjectionType } from 'mongoose';
 import { PaginatedResponseDto } from 'src/dtos/pagination/pagination-response.dto';
 import { PaginationDto } from 'src/dtos/pagination/pagination.dto';
+import { newPaginate } from 'src/common/utils/newPagination.util';
 
 @Injectable()
 export class UserService {
@@ -21,13 +21,13 @@ export class UserService {
     paginationDto: PaginationDto,
   ): Promise<PaginatedResponseDto<IUser>> {
     const query = {};
-    const except = { password: 0, __v: 0 };
+    const except: ProjectionType<IUser> = { password: 0, __v: 0 };
 
-    const usersData = await paginate<IUser>(
+    const usersData = await newPaginate<IUser>(
       this.userModel,
-      paginationDto,
       query,
       except,
+      paginationDto,
     );
 
     if (!usersData || usersData.data.length === 0) {
